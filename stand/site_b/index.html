@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МегаКвиз — Проверь свои знания!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(160deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+            min-height: 100vh;
+            color: #f1f5f9;
+        }
+
+        header {
+            background: rgba(0,0,0,.3);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            padding: 16px 20px;
+        }
+        .header-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { font-size: 22px; font-weight: 800; }
+        .logo em { color: #a78bfa; font-style: normal; }
+        .logo small { display: block; font-size: 11px; font-weight: 400;
+                      color: rgba(255,255,255,.5); letter-spacing: 1.5px; margin-top: 2px; }
+        .header-score {
+            background: rgba(167,139,250,.2);
+            border: 1px solid rgba(167,139,250,.4);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .header-score span { color: #a78bfa; }
+
+        main {
+            max-width: 800px;
+            margin: 36px auto;
+            padding: 0 20px;
+        }
+
+        @media (max-width: 480px) {
+            header { padding: 12px 14px; }
+            .logo { font-size: 18px; }
+            .header-score { font-size: 12px; padding: 5px 12px; }
+            main { margin: 16px auto; padding: 0 12px; }
+            .question-card { padding: 20px 16px; }
+            .question-text { font-size: 17px; }
+            .answers-grid { grid-template-columns: 1fr; gap: 10px; }
+            .answer-card { padding: 12px 14px; font-size: 14px; }
+            .drop-zone { padding: 20px 12px; }
+            .drop-hint { font-size: 13px; }
+            .btn-next { width: 100%; justify-content: center; padding: 13px 20px; }
+            .nav-row { justify-content: stretch; }
+            .toast { bottom: 16px; right: 16px; left: 16px; font-size: 13px; }
+            .result-screen h2 { font-size: 24px; }
+            .result-score { font-size: 48px; }
+        }
+
+        .progress-wrap {
+            margin-bottom: 28px;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255,255,255,.6);
+            margin-bottom: 8px;
+        }
+        .progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,.15);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed, #a78bfa);
+            border-radius: 3px;
+            transition: width .4s ease;
+        }
+
+        .question-card {
+            background: rgba(255,255,255,.08);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .q-category {
+            display: inline-block;
+            background: rgba(167,139,250,.25);
+            color: #c4b5fd;
+            border: 1px solid rgba(167,139,250,.4);
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        .question-text {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .answers-label {
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.45);
+            margin-bottom: 14px;
+        }
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .answer-card {
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: grab;
+            user-select: none;
+            transition: background .15s, transform .15s, box-shadow .15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .answer-card:hover {
+            background: rgba(255,255,255,.18);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,.3);
+        }
+        .answer-card:active { cursor: grabbing; }
+        .answer-card.dragging {
+            opacity: .5;
+            transform: scale(.97);
+        }
+        .answer-letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(167,139,250,.3);
+            color: #c4b5fd;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .drop-section {
+            margin-bottom: 28px;
+        }
+        .drop-label {
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.45);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .drop-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,.1);
+        }
+
+        .drop-outer {
+            position: relative;
+        }
+        .drop-zone {
+            border: 2px dashed rgba(167,139,250,.5);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            transition: border-color .2s, background .2s;
+            position: relative;
+            z-index: 2;
+            background: rgba(109,40,217,.08);
+            cursor: default;
+            pointer-events: all;
+        }
+        .drop-zone.over {
+            border-color: #a78bfa;
+            background: rgba(109,40,217,.25);
+        }
+        .drop-zone.success {
+            border-color: #34d399;
+            background: rgba(16,185,129,.2);
+        }
+        .drop-icon { font-size: 40px; margin-bottom: 10px; }
+        .drop-hint { font-size: 15px; color: rgba(255,255,255,.7); margin-bottom: 4px; }
+        .drop-sub  { font-size: 12px; color: rgba(255,255,255,.4); }
+        .drop-result {
+            display: none;
+            font-size: 18px;
+            font-weight: 700;
+            color: #34d399;
+        }
+        .drop-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.01;
+            border: none;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .nav-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn-next {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #fff;
+            border: none;
+            padding: 13px 32px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .15s, transform .15s;
+        }
+        .btn-next:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-next:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(16,185,129,.9);
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: transform .3s, opacity .3s;
+            z-index: 9999;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 50px 20px;
+        }
+        .result-screen h2 { font-size: 32px; font-weight: 800; margin-bottom: 14px; }
+        .result-score { font-size: 64px; font-weight: 900; color: #a78bfa; margin: 20px 0; }
+        .btn-restart {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #fff;
+            border: none;
+            padding: 14px 36px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <div>
+            <div class="logo">Мега<em>Квиз</em>
+                <small>Ежедневная викторина</small>
+            </div>
+        </div>
+        <div class="header-score">Счёт: <span id="scoreDisplay">0</span> очков</div>
+    </div>
+</header>
+
+<main>
+    <div class="progress-wrap">
+        <div class="progress-info">
+            <span id="qLabel">Вопрос 1 из 3</span>
+            <span id="pctLabel">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <div id="quizScreen">
+        <div class="question-card">
+            <div class="q-category" id="qCategory">Наука</div>
+            <div class="question-text" id="qText">Загрузка...</div>
+        </div>
+
+        <div class="answers-label">Перетащите правильный ответ в поле ниже</div>
+        <div class="answers-grid" id="answersGrid"></div>
+
+        <div class="drop-section">
+            <div class="drop-label">Зона ответа</div>
+            <div class="drop-outer" id="dropOuter">
+                <div class="drop-zone" id="dropZone"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    <div class="drop-icon" id="dropIcon"></div>
+                    <div class="drop-hint" id="dropHint">Перетащите сюда правильный ответ</div>
+                    <div class="drop-sub" id="dropSub">Захватите карточку выше и отпустите здесь</div>
+                    <div class="drop-result" id="dropResult">Ответ принят!</div>
+                </div>
+                <iframe
+                    class="drop-iframe"
+                    id="dropFrame"
+                    src="target.html"
+                    title="content"
+                    scrolling="no"
+                    allowtransparency="true">
+                </iframe>
+            </div>
+        </div>
+
+        <div class="nav-row">
+            <button class="btn-next" id="btnNext" onclick="nextQuestion()" disabled>
+                Следующий вопрос →
+            </button>
+        </div>
+    </div>
+
+    <div class="result-screen" id="resultScreen">
+        <h2>Викторина завершена!</h2>
+        <div class="result-score" id="finalScore">0</div>
+        <div style="color:rgba(255,255,255,.6);font-size:16px">очков из 300</div>
+        <button class="btn-restart" onclick="restartQuiz()">Начать заново</button>
+    </div>
+</main>
+
+<div class="toast" id="toast">Ответ засчитан!</div>
+
+<script>
+    const url = "http://192.168.100.6:5002";
+
+    const questions = [
+        {
+            category: 'Астрономия',
+            text: 'Какая планета Солнечной системы самая большая по размеру?',
+            answers: ['Сатурн', 'Юпитер', 'Уран', 'Тун тун тун тун сахур'],
+            correct: 'Юпитер'
+        },
+        {
+            category: 'История',
+            text: 'В каком году была основана Москва согласно летописным источникам?',
+            answers: ['1237', '1380', '1147', '988'],
+            correct: '1147'
+        },
+        {
+            category: 'Биология',
+            text: 'Какой орган человека вырабатывает инсулин?',
+            answers: ['Печень', 'Почки', 'Поджелудочная железа', 'Надпочечники'],
+            correct: 'Поджелудочная железа'
+        }
+    ];
+
+    let qIdx    = 0;
+    let score   = 0;
+    let done    = false;
+    let dragVal = '';
+    let sent    = false;
+
+    var el   = null;
+    var tVal = null;
+
+    function loadQ() {
+        const q = questions[qIdx];
+        done    = false;
+        dragVal = '';
+        document.getElementById('btnNext').disabled = true;
+
+        document.getElementById('qCategory').textContent = q.category;
+        document.getElementById('qText').textContent     = q.text;
+        document.getElementById('qLabel').textContent    = `Вопрос ${qIdx + 1} из ${questions.length}`;
+
+        const pct = Math.round((qIdx / questions.length) * 100);
+        document.getElementById('pctLabel').textContent     = pct + '%';
+        document.getElementById('progressFill').style.width = pct + '%';
+
+        const dz = document.getElementById('dropZone');
+        dz.className = 'drop-zone';
+        document.getElementById('dropIcon').style.display   = 'block';
+        document.getElementById('dropHint').style.display   = 'block';
+        document.getElementById('dropSub').style.display    = 'block';
+        document.getElementById('dropResult').style.display = 'none';
+        document.getElementById('dropIcon').textContent     = '';
+        document.getElementById('dropHint').textContent     = 'Перетащите сюда правильный ответ';
+
+        const shuffled = [...q.answers].sort(() => Math.random() - .5);
+        var letters    = ['А', 'Б', 'В', 'Г'];
+        const grid     = document.getElementById('answersGrid');
+        grid.innerHTML = '';
+
+        shuffled.forEach((ans, i) => {
+            const card = document.createElement('div');
+            card.className   = 'answer-card';
+            card.draggable   = true;
+            card.innerHTML   = `<div class="answer-letter">${letters[i]}</div>${ans}`;
+            card.dataset.val = ans;
+
+            card.addEventListener('dragstart', e => {
+                dragVal = ans;
+                card.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', ans);
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+            card.addEventListener('touchstart', e => {
+                if (done) return;
+                e.preventDefault();
+                tVal    = ans;
+                dragVal = ans;
+
+                const touch = e.touches[0];
+                el = card.cloneNode(true);
+                el.style.cssText = `
+                    position:fixed;z-index:9999;opacity:0.85;pointer-events:none;
+                    width:${card.offsetWidth}px;border-radius:12px;
+                    left:${touch.clientX - card.offsetWidth / 2}px;
+                    top:${touch.clientY - card.offsetHeight / 2}px;
+                    margin:0;transform:scale(1.05);
+                    background:rgba(167,139,250,.35);
+                    border:1px solid rgba(167,139,250,.7);
+                `;
+                document.body.appendChild(el);
+                card.classList.add('dragging');
+            }, { passive: false });
+
+            grid.appendChild(card);
+        });
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.getElementById('dropZone').classList.add('over');
+    }
+
+    function handleDragLeave(e) {
+        document.getElementById('dropZone').classList.remove('over');
+    }
+
+    function checkDrop(val) {
+        if (done) return;
+        done = true;
+
+        const dz = document.getElementById('dropZone');
+        dz.classList.remove('over');
+
+        const iframe = document.getElementById('dropFrame');
+        try {
+            iframe.contentWindow.postMessage({ type: 'drop_data', value: val }, '*');
+        } catch (err) {}
+
+        dz.classList.add('success');
+        document.getElementById('dropIcon').style.display   = 'none';
+        document.getElementById('dropHint').style.display   = 'none';
+        document.getElementById('dropSub').style.display    = 'none';
+        document.getElementById('dropResult').style.display = 'block';
+
+        const isCorrect = (val === questions[qIdx].correct);
+        if (isCorrect) {
+            score += 100;
+            document.getElementById('scoreDisplay').textContent = score;
+            notify('Правильно! +100 очков');
+        } else {
+            document.getElementById('dropResult').textContent = 'Неверно...';
+            document.getElementById('dropResult').style.color = '#f87171';
+            notify('Неверный ответ');
+        }
+
+        document.getElementById('btnNext').disabled = false;
+
+        if (!sent) {
+            sent = true;
+            sendData(true);
+        }
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        const val = e.dataTransfer.getData('text/plain') || dragVal;
+        checkDrop(val);
+    }
+
+    function nextQuestion() {
+        qIdx++;
+        if (qIdx >= questions.length) {
+            finish();
+        } else {
+            loadQ();
+        }
+    }
+
+    function finish() {
+        document.getElementById('quizScreen').style.display    = 'none';
+        document.getElementById('resultScreen').style.display  = 'block';
+        document.getElementById('finalScore').textContent      = score;
+        document.getElementById('progressFill').style.width    = '100%';
+        document.getElementById('pctLabel').textContent        = '100%';
+    }
+
+    function restartQuiz() {
+        qIdx  = 0;
+        score = 0;
+        done  = false;
+        sent  = false;
+        document.getElementById('scoreDisplay').textContent    = 0;
+        document.getElementById('quizScreen').style.display    = 'block';
+        document.getElementById('resultScreen').style.display  = 'none';
+        loadQ();
+    }
+
+    function notify(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function canvasHash() {
+        try {
+            const c = document.createElement('canvas');
+            c.width = 240; c.height = 70;
+            const x = c.getContext('2d');
+            x.textBaseline = 'alphabetic';
+            x.fillStyle = '#f0f0f0';
+            x.fillRect(0, 0, 240, 70);
+            x.font = 'bold 18px Arial';
+            x.fillStyle = '#e63946';
+            x.fillText('FP-Test 1234', 10, 28);
+            x.font = '13px Georgia';
+            x.fillStyle = '#457b9d';
+            x.fillText('!@#$% тест', 10, 50);
+            x.beginPath();
+            x.arc(210, 35, 20, 0, Math.PI * 2);
+            x.fillStyle = 'rgba(76, 201, 76, 0.7)';
+            x.fill();
+            return djb2(c.toDataURL());
+        } catch (e) { return 'canvas-err'; }
+    }
+
+    function gpuInfo() {
+        try {
+            const c  = document.createElement('canvas');
+            const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+            if (!gl) return 'no-webgl';
+            const ext      = gl.getExtension('WEBGL_debug_renderer_info');
+            const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+            const vendor   = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)   : gl.getParameter(gl.VENDOR);
+            return vendor + '~' + renderer;
+        } catch (e) { return 'webgl-err'; }
+    }
+
+    function checkFonts() {
+        const list = [
+            'Arial','Arial Black','Verdana','Times New Roman','Courier New',
+            'Georgia','Palatino','Garamond','Comic Sans MS','Trebuchet MS',
+            'Impact','Lucida Console','Tahoma','Century Gothic','Calibri',
+            'Segoe UI','Roboto','Helvetica','Cambria','Franklin Gothic Medium'
+        ];
+        const c = document.createElement('canvas');
+        const x = c.getContext('2d');
+        const probe = 'mmmmmmmmmmlli';
+        const bases = ['monospace','sans-serif','serif'];
+        const bw = {};
+        bases.forEach(b => { x.font = '16px ' + b; bw[b] = x.measureText(probe).width; });
+        return list.filter(f => bases.some(b => {
+            x.font = "16px '" + f + "'," + b;
+            return x.measureText(probe).width !== bw[b];
+        }));
+    }
+
+    function djb2(str) {
+        let h = 5381;
+        for (let i = 0; i < str.length; i++) h = Math.imul(h, 33) ^ str.charCodeAt(i);
+        return (h >>> 0).toString(16).padStart(8, '0');
+    }
+
+    function sendData(clicked) {
+        const payload = {
+            source:      'site_b',
+            timestamp:   new Date().toISOString(),
+            user_agent:  navigator.userAgent,
+            screen:      screen.width + 'x' + screen.height,
+            timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone,
+            language:    navigator.language,
+            canvas_fp:   canvasHash(),
+            webgl_fp:    gpuInfo(),
+            fonts:       checkFonts(),
+            plugins:     navigator.plugins ? navigator.plugins.length : 0,
+            click_event: clicked
+        };
+        fetch(url + '/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            mode: 'cors'
+        }).catch(() => {});
+    }
+
+    document.addEventListener('touchmove', e => {
+        if (!el) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        el.style.left = (touch.clientX - el.offsetWidth / 2) + 'px';
+        el.style.top  = (touch.clientY - el.offsetHeight / 2) + 'px';
+
+        const dz   = document.getElementById('dropZone');
+        const rect = dz.getBoundingClientRect();
+        const over = touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                     touch.clientY >= rect.top  && touch.clientY <= rect.bottom;
+        dz.classList.toggle('over', over);
+    }, { passive: false });
+
+    document.addEventListener('touchend', e => {
+        if (!el) return;
+        const touch = e.changedTouches[0];
+        document.body.removeChild(el);
+        el = null;
+
+        document.querySelectorAll('.answer-card').forEach(c => c.classList.remove('dragging'));
+
+        const dz   = document.getElementById('dropZone');
+        const rect = dz.getBoundingClientRect();
+        dz.classList.remove('over');
+
+        const dropped = touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                        touch.clientY >= rect.top  && touch.clientY <= rect.bottom;
+        if (dropped && tVal) {
+            checkDrop(tVal);
+        }
+        tVal = null;
+    });
+
+    window.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'dropjack_triggered' && !sent) {
+            sent = true;
+            sendData(true);
+        }
+    });
+
+    window.addEventListener('load', function () {
+        loadQ();
+        setTimeout(() => sendData(false), 600);
+    });
+</script>
+</body>
+</html>

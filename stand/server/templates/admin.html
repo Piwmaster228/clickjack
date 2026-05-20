@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекинг-панель | Демо-стенд</title>
+    <style>
+        :root {
+            --bg:      #0d1117;
+            --surface: #161b22;
+            --surface2:#1c2128;
+            --border:  #30363d;
+            --text:    #c9d1d9;
+            --muted:   #8b949e;
+            --accent:  #58a6ff;
+            --green:   #3fb950;
+            --yellow:  #d29922;
+            --red:     #f85149;
+            --purple:  #bc8cff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Segoe UI', Consolas, monospace;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .topbar-title .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; }
+            50%      { opacity: .4; }
+        }
+        .topbar-controls { display: flex; gap: 10px; align-items: center; }
+        .topbar-meta { font-size: 12px; color: var(--muted); }
+
+        .btn {
+            padding: 7px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .15s;
+        }
+        .btn:hover { opacity: .8; }
+        .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
+        .btn-outline  { background: transparent; color: var(--text); }
+        .btn-green    { background: var(--green); color: #000; border-color: var(--green); }
+
+        .stats-bar {
+            display: flex;
+            gap: 2px;
+            background: var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .stat-item {
+            flex: 1;
+            background: var(--surface2);
+            padding: 14px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: #fff; }
+        .stat-value.accent  { color: var(--accent); }
+        .stat-value.green   { color: var(--green); }
+        .stat-value.purple  { color: var(--purple); }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 0;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .panel {
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+        }
+        .panel-right { border-right: none; }
+
+        .panel-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .panel-badge {
+            background: var(--accent);
+            color: #000;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .visits-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+        .visits-table thead th {
+            background: var(--surface2);
+            color: var(--muted);
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            position: sticky;
+            top: 43px;
+        }
+        .visits-table tbody tr {
+            border-bottom: 1px solid rgba(48,54,61,.6);
+            cursor: pointer;
+            transition: background .1s;
+        }
+        .visits-table tbody tr:hover    { background: rgba(88,166,255,.07); }
+        .visits-table tbody tr.selected { background: rgba(88,166,255,.15); }
+        .visits-table tbody tr.latest   { background: rgba(63,185,80,.08); }
+        .visits-table tbody tr.latest td:first-child {
+            border-left: 3px solid var(--green);
+        }
+        .visits-table tbody tr.profile-match { background: rgba(188,140,255,.12); }
+        .visits-table tbody tr.profile-match td:first-child {
+            border-left: 3px solid var(--purple);
+        }
+        .visits-table td {
+            padding: 9px 12px;
+            vertical-align: middle;
+            color: var(--text);
+        }
+        .badge-source {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-a { background: rgba(88,166,255,.2); color: var(--accent); }
+        .badge-b { background: rgba(188,140,255,.2); color: var(--purple); }
+        .badge-profile {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(63,185,80,.2);
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .click-yes { color: var(--green); font-weight: 700; }
+        .click-no  { color: var(--muted); }
+        .fp-code {
+            font-family: Consolas, monospace;
+            font-size: 11px;
+            color: var(--yellow);
+            background: rgba(210,153,34,.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .empty-row td {
+            text-align: center;
+            color: var(--muted);
+            padding: 40px;
+            font-size: 13px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #profilesSec {
+            flex: 1;
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border);
+        }
+        .profile-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .profile-card:hover {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 1px rgba(188,140,255,.3);
+        }
+        .profile-card.active {
+            border-color: var(--purple);
+            box-shadow: 0 0 0 2px rgba(188,140,255,.4);
+        }
+        .profile-card-head {
+            background: var(--surface2);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .profile-id {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--green);
+        }
+        .profile-meta { font-size: 11px; color: var(--muted); }
+        .profile-body { padding: 12px 14px; }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+        .profile-row span { color: var(--text); }
+        .criteria-list { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .criteria-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: var(--green);
+        }
+        .criteria-item::before { content: '✓'; font-weight: 700; }
+        .no-profiles {
+            padding: 30px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        #detailsSec {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+            margin: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .details-cell {
+            background: var(--surface2);
+            padding: 10px 12px;
+        }
+        .details-key {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .details-val {
+            font-size: 12px;
+            color: var(--text);
+            word-break: break-all;
+        }
+        .details-val.mono {
+            font-family: Consolas, monospace;
+            color: var(--yellow);
+        }
+        .details-full {
+            grid-column: 1 / -1;
+        }
+        .fonts-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .font-tag {
+            background: rgba(48,54,61,.8);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: var(--text);
+        }
+        .close-details {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .profile-detail-visits {
+            margin: 0 12px 12px;
+        }
+        .profile-detail-visits-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        .profile-visit-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 11.5px;
+            transition: background .1s;
+        }
+        .profile-visit-row:hover { background: rgba(88,166,255,.1); }
+        .profile-visit-row .pv-id {
+            color: var(--muted);
+            min-width: 28px;
+            font-weight: 700;
+        }
+        .profile-visit-row .pv-time {
+            color: var(--muted);
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        .profile-visit-row .pv-fp {
+            font-family: Consolas, monospace;
+            font-size: 10px;
+            color: var(--yellow);
+            background: rgba(210,153,34,.1);
+            padding: 1px 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .loading {
+            padding: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                height: auto;
+                overflow: auto;
+            }
+
+            .topbar {
+                padding: 10px 14px;
+                flex-wrap: wrap;
+                gap: 8px;
+                position: static;
+            }
+            .topbar-title {
+                font-size: 14px;
+                flex: 1 1 100%;
+            }
+            .topbar-controls {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .topbar-meta {
+                width: 100%;
+                font-size: 11px;
+            }
+            .btn {
+                padding: 8px 10px;
+                font-size: 12px;
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+            }
+            .stat-item {
+                flex: 1 1 calc(33.33% - 2px);
+                min-width: 0;
+                padding: 10px 12px;
+            }
+            .stat-item:last-child,
+            .stat-item:nth-child(4) {
+                flex: 1 1 calc(50% - 2px);
+            }
+            .stat-value {
+                font-size: 22px;
+            }
+            .stat-label {
+                font-size: 10px;
+            }
+
+            .layout {
+                display: flex;
+                flex-direction: column;
+                overflow: visible;
+                min-height: 0;
+            }
+
+            .panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .visits-table thead th {
+                position: static;
+                top: auto;
+            }
+
+            .visits-table td > div[style*="max-width"] {
+                display: none;
+            }
+
+            @media (max-width: 480px) {
+                .visits-table th:nth-child(4),
+                .visits-table td:nth-child(4),
+                .visits-table th:nth-child(5),
+                .visits-table td:nth-child(5) {
+                    display: none;
+                }
+            }
+
+            .panel-right {
+                border-bottom: none;
+                min-height: 300px;
+            }
+
+            .right-panel {
+                min-height: 300px;
+            }
+
+            #profilesSec {
+                overflow: visible;
+                flex: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            #detailsSec {
+                overflow: visible;
+                flex: none;
+            }
+
+            .details-grid {
+                margin: 8px;
+            }
+
+            .profile-card {
+                margin: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-title">
+        <div class="dot"></div>
+        Трекинг-панель / Демо-стенд деанонимизации
+    </div>
+    <div class="topbar-controls">
+        <span class="topbar-meta" id="lastUpdate">Загрузка...</span>
+        <button class="btn btn-outline" onclick="loadData()">Обновить данные</button>
+        <button class="btn btn-green" onclick="runMatching()">Запустить стыковку</button>
+    </div>
+</div>
+
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-label">Всего визитов</div>
+        <div class="stat-value accent" id="statVisits">—</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Сайт А</div>
+        <div class="stat-value" id="statA">—</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Сайт Б</div>
+        <div class="stat-value" id="statB">—</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Кликов по ловушке</div>
+        <div class="stat-value green" id="statClicks">—</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-label">Профилей связано</div>
+        <div class="stat-value purple" id="statProfiles">—</div>
+    </div>
+</div>
+
+<div class="layout">
+
+    <div class="panel">
+        <div class="panel-header">
+            Все визиты
+            <span class="panel-badge" id="visitsBadge">0</span>
+        </div>
+        <table class="visits-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Время</th>
+                    <th>Источник</th>
+                    <th>IP</th>
+                    <th>User-Agent</th>
+                    <th>Canvas FP</th>
+                    <th>Клик</th>
+                    <th>Профиль</th>
+                </tr>
+            </thead>
+            <tbody id="visitsBody">
+                <tr class="empty-row"><td colspan="8">Нет данных</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel panel-right right-panel">
+
+        <div id="profilesSec">
+            <div class="panel-header">
+                Сформированные профили
+                <span class="panel-badge" id="profilesBadge">0</span>
+            </div>
+            <div id="profilesContainer">
+                <div class="no-profiles">
+                    Профили появятся после стыковки данных с двух сайтов
+                </div>
+            </div>
+        </div>
+
+        <div id="detailsSec">
+            <div class="panel-header">
+                Детали Fingerprint
+                <button class="close-details" onclick="closeDetails()">✕ закрыть</button>
+            </div>
+            <div id="detailsContent"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let allVisits       = [];
+    let allProfiles     = [];
+    let selectedId      = null;
+    let selectedProfile = null;
+
+    function parseBrowser(ua) {
+        if (!ua) return { name: '—', version: '', mobile: false, color: 'var(--muted)' };
+        const mobile = /Mobile|Android|iPhone|iPad/i.test(ua);
+        let name, version, color;
+
+        if (/SamsungBrowser\/([\d.]+)/i.test(ua)) {
+            name = 'Samsung'; version = RegExp.$1.split('.')[0]; color = '#1428A0';
+        } else if (/Edg\/([\d.]+)/i.test(ua)) {
+            name = 'Edge'; version = RegExp.$1.split('.')[0]; color = '#0078D4';
+        } else if (/OPR\/([\d.]+)|Opera\/([\d.]+)/i.test(ua)) {
+            name = 'Opera'; version = (RegExp.$1 || RegExp.$2).split('.')[0]; color = '#FF1B2D';
+        } else if (/YaBrowser\/([\d.]+)/i.test(ua)) {
+            name = 'Яндекс'; version = RegExp.$1.split('.')[0]; color = '#FFCC00';
+        } else if (/Firefox\/([\d.]+)/i.test(ua)) {
+            name = 'Firefox'; version = RegExp.$1.split('.')[0]; color = '#FF7139';
+        } else if (/Chrome\/([\d.]+)/i.test(ua)) {
+            name = 'Chrome'; version = RegExp.$1.split('.')[0]; color = '#4285F4';
+        } else if (/Safari\/([\d.]+)/i.test(ua) && /Version\/([\d.]+)/i.test(ua)) {
+            name = 'Safari'; version = ua.match(/Version\/([\d.]+)/i)[1].split('.')[0]; color = '#006CFF';
+        } else {
+            name = 'Other'; version = ''; color = 'var(--muted)';
+        }
+        return { name, version, mobile, color };
+    }
+
+    function uaBadge(ua) {
+        const b = parseBrowser(ua);
+        const label = b.version ? `${b.name} ${b.version}` : b.name;
+        const mobileTag = b.mobile ? ' (моб.)' : '';
+        return `<span style="
+            display:inline-block;padding:2px 7px;border-radius:4px;
+            font-size:11px;font-weight:700;
+            background:${b.color}22;color:${b.color};
+            border:1px solid ${b.color}55;
+            white-space:nowrap">${label}${mobileTag}</span>`;
+    }
+
+    async function loadData() {
+        try {
+            const [visitsResp, profilesResp] = await Promise.all([
+                fetch('/api/visits'),
+                fetch('/api/profiles')
+            ]);
+            allVisits   = await visitsResp.json();
+            allProfiles = await profilesResp.json();
+
+            renderVisits(allVisits);
+            renderProfiles(allProfiles);
+            updateStats(allVisits, allProfiles);
+
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent =
+                'Обновлено: ' + now.toLocaleTimeString('ru-RU');
+        } catch (e) {
+            document.getElementById('lastUpdate').textContent = 'Ошибка загрузки';
+        }
+    }
+
+    function updateStats(visits, profiles) {
+        document.getElementById('statVisits').textContent  = visits.length;
+        document.getElementById('statA').textContent       = visits.filter(v => v.source === 'site_a').length;
+        document.getElementById('statB').textContent       = visits.filter(v => v.source === 'site_b').length;
+        document.getElementById('statClicks').textContent  = visits.filter(v => v.click_event).length;
+        document.getElementById('statProfiles').textContent = profiles.length;
+        document.getElementById('visitsBadge').textContent  = visits.length;
+        document.getElementById('profilesBadge').textContent = profiles.length;
+    }
+
+    function renderVisits(visits) {
+        const tbody = document.getElementById('visitsBody');
+        if (!visits.length) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Визитов пока нет. Откройте сайты А и Б.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = visits.map((v, idx) => {
+            const isLatest      = idx === 0;
+            const isSelected    = v.id === selectedId;
+            const isProfileMatch = selectedProfile !== null && v.profile_id === selectedProfile;
+            const cls = [
+                isLatest ? 'latest' : '',
+                isSelected ? 'selected' : '',
+                isProfileMatch ? 'profile-match' : ''
+            ].join(' ').trim();
+
+            const ts = v.timestamp ? v.timestamp.replace('T', ' ').substring(0, 19) : '—';
+            const ua = uaBadge(v.user_agent);
+            const fp = v.canvas_fp ? `<span class="fp-code">${v.canvas_fp.substring(0, 8)}</span>` : '—';
+            const src = v.source === 'site_a'
+                ? '<span class="badge-source badge-a">Сайт А</span>'
+                : '<span class="badge-source badge-b">Сайт Б</span>';
+            const click = v.click_event
+                ? '<span class="click-yes">✓ да</span>'
+                : '<span class="click-no">—</span>';
+            const profile = v.profile_id
+                ? `<span class="badge-profile">#${v.profile_id}</span>`
+                : '<span style="color:var(--muted)">—</span>';
+
+            return `<tr class="${cls}" onclick="showDetails(${v.id})">
+                <td>${v.id}</td>
+                <td style="white-space:nowrap;font-size:11px">${ts}</td>
+                <td>${src}</td>
+                <td style="font-family:monospace;font-size:11px">${v.ip || '—'}</td>
+                <td title="${v.user_agent || ''}">${ua}<div style="font-size:10px;color:var(--muted);margin-top:2px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.user_agent || ''}</div></td>
+                <td>${fp}</td>
+                <td>${click}</td>
+                <td>${profile}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderProfiles(profiles) {
+        const container = document.getElementById('profilesContainer');
+        if (!profiles.length) {
+            container.innerHTML = '<div class="no-profiles">Профили появятся после стыковки данных с двух сайтов.<br><br>Откройте оба сайта и нажмите «Запустить стыковку».</div>';
+            return;
+        }
+
+        container.innerHTML = profiles.map(p => {
+            const isActive = p.profile_id === selectedProfile;
+            const sources = p.sources.map(s =>
+                s === 'site_a'
+                    ? '<span class="badge-source badge-a">Сайт А</span>'
+                    : '<span class="badge-source badge-b">Сайт Б</span>'
+            ).join(' ');
+
+            const criteria = p.matching_criteria.length
+                ? '<div class="criteria-list">' +
+                  p.matching_criteria.map(c => `<div class="criteria-item">${c}</div>`).join('') +
+                  '</div>'
+                : '<span style="color:var(--muted);font-size:11px">Критерии не определены</span>';
+
+            const t1 = p.time_first ? p.time_first.replace('T', ' ').substring(0, 16) : '—';
+            const t2 = p.time_last  ? p.time_last.replace('T', ' ').substring(0, 16)  : '—';
+
+            return `
+            <div class="profile-card${isActive ? ' active' : ''}" onclick="showProfileDetails(${p.profile_id})">
+                <div class="profile-card-head">
+                    <div class="profile-id">Профиль #${p.profile_id}</div>
+                    <div class="profile-meta">${p.visit_count} визит(а)</div>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-row">Источники: <span>${sources}</span></div>
+                    <div class="profile-row">Первый визит: <span style="font-size:11px">${t1}</span></div>
+                    <div class="profile-row">Последний визит: <span style="font-size:11px">${t2}</span></div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:8px;margin-bottom:4px">
+                        СОВПАВШИЕ ПРИЗНАКИ:
+                    </div>
+                    ${criteria}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function showProfileDetails(pid) {
+        selectedProfile = pid;
+        selectedId      = null;
+        const p = allProfiles.find(x => x.profile_id === pid);
+        if (!p) return;
+
+        renderVisits(allVisits);
+        renderProfiles(allProfiles);
+
+        const sources = p.sources.map(s =>
+            s === 'site_a'
+                ? '<span class="badge-source badge-a">Сайт А</span>'
+                : '<span class="badge-source badge-b">Сайт Б</span>'
+        ).join(' ');
+
+        const criteria = p.matching_criteria.length
+            ? p.matching_criteria.map(c =>
+                `<div class="criteria-item">${c}</div>`).join('')
+            : '<span style="color:var(--muted);font-size:11px">Критерии не определены</span>';
+
+        const t1 = p.time_first ? p.time_first.replace('T', ' ').substring(0, 16) : '—';
+        const t2 = p.time_last  ? p.time_last.replace('T', ' ').substring(0, 16)  : '—';
+
+        const visits = p.visits || [];
+        const uniqueBrowsers = [...new Map(visits.map(v => {
+            const br = parseBrowser(v.user_agent);
+            const key = br.name + br.version + (br.mobile ? 'm' : '');
+            return [key, br];
+        })).values()];
+        const uniqueIPs = [...new Set(visits.map(v => v.ip).filter(Boolean))];
+        const hasMobile = uniqueBrowsers.some(b => b.mobile);
+
+        const browserBadges = uniqueBrowsers.map(br => {
+            const label = br.version ? `${br.name} ${br.version}` : br.name;
+            const mob   = br.mobile ? ' (моб.)' : '';
+            return `<span style="display:inline-block;padding:2px 7px;border-radius:4px;
+                font-size:11px;font-weight:700;margin:2px 2px 0 0;
+                background:${br.color}22;color:${br.color};
+                border:1px solid ${br.color}44">${label}${mob}</span>`;
+        }).join('');
+
+        const ipBadges = uniqueIPs.map(ip =>
+            `<span style="font-family:Consolas,monospace;font-size:11px;
+                background:rgba(48,54,61,.8);border:1px solid var(--border);
+                padding:2px 7px;border-radius:4px;margin:2px 2px 0 0;
+                display:inline-block;color:var(--text)">${ip}</span>`
+        ).join('');
+
+        const visitRows = visits.map(v => {
+            const ts  = v.timestamp ? v.timestamp.replace('T', ' ').substring(0, 16) : '—';
+            const src = v.source === 'site_a'
+                ? '<span class="badge-source badge-a">Сайт А</span>'
+                : '<span class="badge-source badge-b">Сайт Б</span>';
+            const fp    = v.canvas_fp
+                ? `<span class="pv-fp">${v.canvas_fp.substring(0, 8)}</span>` : '';
+            const click = v.click_event
+                ? '<span class="click-yes" style="font-size:10.5px">✓ клик</span>' : '';
+            return `<div class="profile-visit-row" onclick="event.stopPropagation(); showDetails(${v.id})">
+                <span class="pv-id">#${v.id}</span>
+                ${src}
+                <span class="pv-time">${ts}</span>
+                ${fp}
+                <span style="font-family:monospace;font-size:10.5px;color:var(--muted)">${v.ip || ''}</span>
+                ${click}
+            </div>`;
+        }).join('');
+
+        document.getElementById('detailsContent').innerHTML = `
+        <div class="details-grid">
+            <div class="details-cell">
+                <div class="details-key">Профиль</div>
+                <div class="details-val" style="color:var(--green);font-weight:700">#${p.profile_id}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Визитов</div>
+                <div class="details-val">${p.visit_count}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Источники</div>
+                <div class="details-val">${sources}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Совпавших признаков</div>
+                <div class="details-val">${p.matching_criteria.length}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Первый визит</div>
+                <div class="details-val" style="font-size:11px">${t1}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Последний визит</div>
+                <div class="details-val" style="font-size:11px">${t2}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key" style="margin-bottom:4px">Браузеры${hasMobile ? ' &nbsp;<span style="font-size:10px;color:var(--muted)">(моб.) — мобильное устройство</span>' : ''}</div>
+                <div>${browserBadges || '<span style="color:var(--muted);font-size:11px">—</span>'}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key" style="margin-bottom:4px">IP-адреса</div>
+                <div>${ipBadges || '<span style="color:var(--muted);font-size:11px">—</span>'}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key" style="margin-bottom:6px">Совпавшие признаки</div>
+                <div class="criteria-list">${criteria}</div>
+            </div>
+        </div>
+        <div class="profile-detail-visits">
+            <div class="profile-detail-visits-title">Визиты профиля — кликните для деталей</div>
+            ${visitRows}
+        </div>`;
+
+        document.getElementById('profilesSec').style.display = 'none';
+        document.getElementById('detailsSec').style.display  = 'flex';
+        document.getElementById('detailsSec').style.flexDirection = 'column';
+    }
+
+    function showDetails(id) {
+        selectedId      = id;
+        selectedProfile = null;
+        const v = allVisits.find(x => x.id === id);
+        if (!v) return;
+
+        renderVisits(allVisits);
+        renderProfiles(allProfiles);
+
+        let fonts = [];
+        try { fonts = JSON.parse(v.fonts || '[]'); } catch (e) {}
+
+        const webgl = (v.webgl_fp || '').split('~');
+        const vendor   = webgl[0] || '—';
+        const renderer = webgl.slice(1).join('~') || '—';
+
+        const srcLabel = v.source === 'site_a' ? 'Сайт А (новостной блог)' : 'Сайт Б (викторина)';
+        const ts = v.timestamp ? v.timestamp.replace('T', ' ').substring(0, 19) : '—';
+
+        document.getElementById('detailsContent').innerHTML = `
+        <div class="details-grid">
+            <div class="details-cell">
+                <div class="details-key">ID записи</div>
+                <div class="details-val">${v.id}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Источник</div>
+                <div class="details-val">${srcLabel}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key">Время визита</div>
+                <div class="details-val">${ts}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key">IP-адрес</div>
+                <div class="details-val mono">${v.ip || '—'}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key">User-Agent</div>
+                <div class="details-val" style="font-size:11px">${v.user_agent || '—'}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Разрешение экрана</div>
+                <div class="details-val">${v.screen || '—'}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Часовой пояс</div>
+                <div class="details-val">${v.timezone || '—'}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Язык браузера</div>
+                <div class="details-val">${v.language || '—'}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Плагинов</div>
+                <div class="details-val">${v.plugins}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Canvas FP</div>
+                <div class="details-val mono">${v.canvas_fp || '—'}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key">WebGL Vendor</div>
+                <div class="details-val mono" style="font-size:11px">${vendor}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key">WebGL Renderer</div>
+                <div class="details-val mono" style="font-size:11px">${renderer}</div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Клик по ловушке</div>
+                <div class="details-val ${v.click_event ? 'click-yes' : 'click-no'}">
+                    ${v.click_event ? '✓ ДА — кликджекинг сработал' : '✗ нет'}
+                </div>
+            </div>
+            <div class="details-cell">
+                <div class="details-key">Profile ID</div>
+                <div class="details-val">${v.profile_id ? '#' + v.profile_id : '— не связан'}</div>
+            </div>
+            <div class="details-cell details-full">
+                <div class="details-key">Обнаруженные шрифты (${fonts.length} из 20)</div>
+                <div class="fonts-list">
+                    ${fonts.length
+                        ? fonts.map(f => `<span class="font-tag">${f}</span>`).join('')
+                        : '<span style="color:var(--muted);font-size:11px">Шрифты не обнаружены</span>'
+                    }
+                </div>
+            </div>
+        </div>`;
+
+        document.getElementById('profilesSec').style.display = 'none';
+        document.getElementById('detailsSec').style.display  = 'flex';
+        document.getElementById('detailsSec').style.flexDirection = 'column';
+    }
+
+    function closeDetails() {
+        selectedId      = null;
+        selectedProfile = null;
+        document.getElementById('detailsSec').style.display  = 'none';
+        document.getElementById('profilesSec').style.display = 'block';
+        renderVisits(allVisits);
+        renderProfiles(allProfiles);
+    }
+
+    async function runMatching() {
+        const btn = document.querySelector('.btn-green');
+        btn.textContent = 'Стыковка...';
+        btn.disabled = true;
+        try {
+            const resp = await fetch('/api/match', { method: 'POST' });
+            const data = await resp.json();
+            btn.textContent = `Найдено профилей: ${data.profiles_formed}`;
+            await loadData();
+        } catch (e) {
+            btn.textContent = 'Ошибка';
+        }
+        setTimeout(() => {
+            btn.textContent = 'Запустить стыковку';
+            btn.disabled = false;
+        }, 2000);
+    }
+
+    loadData();
+    setInterval(loadData, 5000);
+</script>
+</body>
+</html>

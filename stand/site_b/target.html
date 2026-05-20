@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+        #dropTarget {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+        input {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="dropTarget"></div>
+    <input type="text" id="hiddenInput">
+    <script>
+        const target = document.getElementById('dropTarget');
+        const input  = document.getElementById('hiddenInput');
+
+        window.addEventListener('message', function (e) {
+            if (e.data && e.data.type === 'drop_data') {
+                input.value = e.data.value || '';
+                window.parent.postMessage({ type: 'dropjack_triggered', site: 'b' }, '*');
+            }
+        });
+
+        target.addEventListener('dragover', e => e.preventDefault());
+        target.addEventListener('drop', function (e) {
+            e.preventDefault();
+            input.value = e.dataTransfer.getData('text') || '';
+            window.parent.postMessage({ type: 'dropjack_triggered', site: 'b' }, '*');
+        });
+    </script>
+</body>
+</html>
