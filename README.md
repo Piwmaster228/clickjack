@@ -18,12 +18,65 @@
 
 # Требования
 
-Python 3.9+  
-pip
+- Python 3.9+
+- pip
 
+---
+
+## Как запустить
+
+### 1. Клонируйте репозиторий
+
+```bash
+git https://github.com/Piwmaster228/clickjack.git
+cd clickjack
 ```
-pip install flask flask-cors
+
+### 2. Создайте и активируйте виртуальное окружение
+
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+
+# Linux / macOS
+python3 -m venv .venv
+source .venv/bin/activate
 ```
+
+### 3. Установите зависимости
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Запустите серверы (три отдельных терминала)
+
+**Терминал 1 — сервер трекинга**
+```bash
+cd stand/server
+python app.py
+```
+
+**Терминал 2 — Сайт А**
+```bash
+cd stand/site_a
+python server.py
+```
+
+**Терминал 3 — Сайт Б**
+```bash
+cd stand/site_b
+python server.py
+```
+
+### 5. Откройте в браузере
+
+| Адрес | Что открывается |
+|-------|----------------|
+| `http://localhost:5000` | Сайт А — новостной блог |
+| `http://localhost:5001` | Сайт Б — викторина |
+| `http://localhost:5002/admin` | Панель администратора |
 
 ---
 
@@ -47,35 +100,3 @@ stand/
 └── README.md
 ```
 
----
-
-## Порядок запуска
-
-### Терминал 1 — сервер трекинга
-
-```bash
-cd stand/server
-python app.py
-```
-
-### Терминал 2 — Сайт А
-
-```bash
-cd stand/site_a
-python server.py
-```
-
-### Терминал 3 — Сайт Б
-
-```bash
-cd stand/site_b
-python server.py
-```
-
-### Открыть в браузере
-
-| Адрес | Что открывается |
-|-------|----------------|
-| `http://localhost:5000` | Сайт А — новостной блог |
-| `http://localhost:5001` | Сайт Б — викторина |
-| `http://localhost:5002/admin` | Панель администратора |
